@@ -1,8 +1,18 @@
+"""
+Implementation of the reversi board game compatible with the jrb_board.games interface.
+"""
+
 import re
 import string
 
+# pylint: disable=invalid-name
+# pylint: disable=missing-docstring
+# pylint: disable=broad-except
+# pylint: disable=no-self-use
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-statements
 
-class Board(object):
+class Board:
     num_players = 2
     rows = cols = 8
 
@@ -13,26 +23,26 @@ class Board(object):
 
     moveRE = re.compile(r'([a-h])([1-8])')
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *_unused1, **_unused2):
         if not self.positions:
             self.initialize()
 
     @classmethod
     def initialize(cls):
         cls.positions.update(((r, c), 1 << (cls.cols * r + c))
-                             for r in xrange(cls.rows)
-                             for c in xrange(cls.cols))
+                             for r in range(cls.rows)
+                             for c in range(cls.cols))
 
     def starting_state(self):
         # p1 placed, p2 placed, previous player, player to move
-        return (self.positions[(3,4)] + self.positions[(4,3)],
-                self.positions[(3,3)] + self.positions[(4,4)], 2, 1)
+        return (self.positions[(3, 4)] + self.positions[(4, 3)],
+                self.positions[(3, 3)] + self.positions[(4, 4)], 2, 1)
 
     def display(self, state, action, _unicode=True):
         pieces = self.unicode_pieces if _unicode else self.str_pieces
 
         row_sep = "  |" + "-"*(4*self.cols - 1) + "|\n"
-        header = "\n" + " "*4 + "   ".join(string.lowercase[:self.cols]) + "\n"
+        header = "\n" + " "*4 + "   ".join(string.ascii_lowercase[:self.cols]) + "\n"
         msg = "{0}Player {1} to move.    ({2}-{3})".format(
             "Played: {}\n".format(
                 self.to_notation(self.to_compact_action(action))) if action else '',
@@ -41,7 +51,7 @@ class Board(object):
             sum(1 for p in state['pieces'] if p['player'] == 2)
         )
 
-        P = [[0 for c in xrange(self.cols)] for r in xrange(self.rows)]
+        P = [[0 for c in range(self.cols)] for r in range(self.rows)]
         for p in state['pieces']:
             P[p['row']][p['column']] = p['player']
 
@@ -56,7 +66,7 @@ class Board(object):
 
     def legal_actions(self, history):
         ## Kogge-Stone algorithm
-        p1_placed, p2_placed, previous, player = history[-1]
+        p1_placed, p2_placed, _previous, player = history[-1]
         occupied = p1_placed | p2_placed
         empty = 0xffffffffffffffff ^ occupied
 
@@ -139,7 +149,7 @@ class Board(object):
         g |= p & (g << 28)
         legal |= ((g & ~mine & mask_a) << 7) & empty
 
-        return [(r, c) for (r, c), v in self.positions.iteritems()
+        return [(r, c) for (r, c), v in self.positions.items()
                 if v & legal]
 
     def previous_player(self, state):
@@ -150,7 +160,7 @@ class Board(object):
 
     def is_ended(self, history):
         state = history[-1]
-        p1_placed, p2_placed, previous, player = state
+        p1_placed, p2_placed, _previous, _player = state
 
         if p2_placed == 0:
             return True
@@ -163,10 +173,10 @@ class Board(object):
 
     def win_values(self, history):
         if not self.is_ended(history):
-            return
+            return None
 
         state = history[-1]
-        p1_placed, p2_placed, previous, player = state
+        p1_placed, p2_placed, _previous, _player = state
 
         p1_score = bin(p1_placed).count('1')
         p2_score = bin(p2_placed).count('1')
@@ -177,13 +187,14 @@ class Board(object):
             return {1: 0, 2: 1}
         if p1_score == p2_score:
             return {1: 0.5, 2: 0.5}
+        return None
 
     def points_values(self, history):
         if not self.is_ended(history):
-            return
+            return None
 
         state = history[-1]
-        p1_placed, p2_placed, previous, player = state
+        p1_placed, p2_placed, _previous, _player = state
 
         p1_score = bin(p1_placed).count('1') * 1.0
         p2_score = bin(p2_placed).count('1') * 1.0
@@ -192,7 +203,7 @@ class Board(object):
         return {1: (p1_score - p2_score) / total, 2: (p2_score - p1_score) / total}
 
     def winner_message(self, winners):
-        winners = sorted((v, k) for k, v in winners.iteritems())
+        winners = sorted((v, k) for k, v in winners.items())
         value, winner = winners[-1]
         if value == 0.5:
             return "Tie."
@@ -212,8 +223,8 @@ class Board(object):
         p1_placed, p2_placed, previous, player = state
 
         pieces = []
-        for r in xrange(self.rows):
-            for c in xrange(self.cols):
+        for r in range(self.rows):
+            for c in range(self.cols):
                 index = 1 << (self.cols * r + c)
                 if index & p1_placed:
                     pieces.append({'type': 'disc', 'player': 1, 'row': r, 'column': c})
@@ -238,7 +249,7 @@ class Board(object):
     def from_notation(self, notation):
         result = self.moveRE.match(notation)
         if not result:
-            return
+            return None
         c, r = result.groups()
         return (int(r) - 1, 'abcdefgh'.index(c))
 
@@ -251,10 +262,10 @@ class Board(object):
     def next_state(self, history, action):
         state = history[-1]
         P = self.positions[action]
-        p1_placed, p2_placed, previous, player = state
+        p1_placed, p2_placed, _previous, player = state
 
-        occupied = p1_placed | p2_placed
-        empty = 0xffffffffffffffff ^ occupied
+        #occupied = p1_placed | p2_placed
+        #empty = 0xffffffffffffffff ^ occupied
 
         mask_a = 0xfefefefefefefefe
         mask_h = 0x7f7f7f7f7f7f7f7f

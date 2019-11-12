@@ -1,5 +1,17 @@
+"""
+Unit tests for reversi.py.
+"""
 import unittest
-from reversi import Board
+from reversi import Board # pylint: disable=no-name-in-module
+
+# pylint: disable=invalid-name
+# pylint: disable=missing-docstring
+# pylint: disable=broad-except
+# pylint: disable=no-self-use
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-statements
+# pylint: disable=bad-whitespace
+
 
 board = Board()
 
