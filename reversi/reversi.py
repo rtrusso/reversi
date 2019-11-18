@@ -202,6 +202,15 @@ class Board:
 
         return {1: (p1_score - p2_score) / total, 2: (p2_score - p1_score) / total}
 
+    # required by framework
+    def winning_players(self, winners):
+        winners = sorted((v, k) for k, v in winners.items())
+        value, winner = winners[-1]
+        if value == 0.5:
+            return []
+        return [winner]
+
+    # required by framework
     def winner_message(self, winners):
         winners = sorted((v, k) for k, v in winners.items())
         value, winner = winners[-1]
